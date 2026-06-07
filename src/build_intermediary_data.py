@@ -49,20 +49,20 @@ def build_intermediary_dataset(free_tier: bool = True, max_retries: int = 3):
             continue
 
         logging.info(f"[{i+1}/{total_symbols}] Fetching {ticker}...")
-        
+
         df = None
         retries = 0
-        
+
         while retries <= max_retries:
             try:
                 df = gatherer.fetch_weekly_data(ticker)
                 # If we get here without an exception, break the retry loop
-                break 
+                break
             except Exception as e:
                 # Polygon RESTClient throws exceptions on 4xx/5xx
                 err_str = str(e).lower()
                 retries += 1
-                
+
                 # Check if it's explicitly a 429 rate limit
                 if "429" in err_str or "too many requests" in err_str:
                     wait_time = 60 # wait a full minute if we hit a hard 429

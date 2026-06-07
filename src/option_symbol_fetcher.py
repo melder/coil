@@ -27,17 +27,17 @@ def fetch_cboe_symbols(symbol_type: str = "all") -> list[dict[str, Any]]:
         return []
 
     logging.info(f"Fetching {symbol_type} from CBOE...")
-    
+
     try:
         response = requests.get(url, timeout=30, headers=_HEADERS)
         response.raise_for_status()
 
         # Simple CSV read
         df = pd.read_csv(StringIO(response.text))
-        
+
         # Normalize headers (CBOE often has leading/trailing spaces)
         df.columns = df.columns.str.strip()
-        
+
         if df.empty:
             logging.warning("CBOE returned empty data.")
             return []
@@ -54,7 +54,7 @@ def fetch_cboe_symbols(symbol_type: str = "all") -> list[dict[str, Any]]:
             ticker = str(row.get(target_col, "")).strip()
             if not ticker or pd.isna(row.get(target_col)):
                 continue
-                
+
             symbols.append({
                 "ticker": ticker,
                 "name": str(row.get("Company Name", "")).strip(),

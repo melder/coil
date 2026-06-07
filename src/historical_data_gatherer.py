@@ -28,44 +28,44 @@ class HistoricalDataGatherer:
         try:
 
             logging.info(f"Fetching Polygon data for {ticker}...")
-            # Polygon aggs endpoint: 
+            # Polygon aggs endpoint:
             # We fetch daily and resample to weekly, or fetch weekly directly.
             # Polygon supports multiplier=1, timespan='week'
-            
+
             # Since we need exactly 'weeks' of data ending recently, and Polygon requires
             # date ranges, we calculate a safe lookback window (e.g., weeks * 2 to account for holidays)
             end_date = pd.Timestamp.now().strftime('%Y-%m-%d')
             start_date = (pd.Timestamp.now() - pd.Timedelta(weeks=weeks*2)).strftime('%Y-%m-%d')
-            
+
             aggs = []
             for a in self.polygon_client.list_aggs(
-                ticker, 
-                multiplier=1, 
-                timespan="week", 
-                from_=start_date, 
+                ticker,
+                multiplier=1,
+                timespan="week",
+                from_=start_date,
                 to=end_date,
                 limit=50000
             ):
                 aggs.append(a)
-                
+
             if not aggs:
                 logging.warning(f"No data returned from Polygon for {ticker}")
                 return None
-                
+
             df = pd.DataFrame(aggs)
             # Polygon uses ms timestamps
             df['Date'] = pd.to_datetime(df['timestamp'], unit='ms')
             df.set_index('Date', inplace=True)
-            
+
             # Map Polygon's format to our standard
             df.rename(columns={'open': 'Open', 'high': 'High', 'low': 'Low', 'close': 'Close', 'volume': 'Volume'}, inplace=True)
-            
+
             # Enforce the required columns
             std_df = df[['Open', 'Close', 'Low', 'High', 'Volume']].copy()
-            
+
             # Return exactly the requested number of weeks (tail)
             return std_df.tail(weeks)
-            
+
         except Exception as e:
             logging.error(f"Polygon fetch failed for {ticker}: {e}")
             return None
