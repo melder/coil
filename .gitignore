@@ -1,0 +1,15 @@
+# Environments
+.env
+.venv/
+venv/
+
+# Data directories
+data/
+*.csv
+
+# Python artifacts
+__pycache__/
+
+# IDEs and Editors
+.vscode/
+.DS_Store
