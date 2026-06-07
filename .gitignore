@@ -9,6 +9,7 @@ data/
 
 # Python artifacts
 __pycache__/
+*.egg-info/
 
 # IDEs and Editors
 .vscode/

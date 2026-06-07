@@ -30,10 +30,17 @@ POLYGON_API_KEY=your_actual_api_key_here
 ```
 
 ### 3. Python Virtual Environment
-Create and activate the virtual environment (macOS):
+Ensure you have Python 3.14.5 installed (matching the dev container). On macOS, you can use `pyenv`:
 
 ```bash
-python3 -m venv .venv
+pyenv install 3.14.5
+pyenv local 3.14.5
+```
+
+Create and activate the virtual environment:
+
+```bash
+python -m venv .venv
 source .venv/bin/activate
 ```
 
