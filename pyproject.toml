@@ -1,0 +1,55 @@
+[project]
+name = "market-data"
+version = "0.1.0"
+dependencies = [
+    "click",
+    "python-dotenv",
+    "alpha_vantage",
+    "polygon-api-client",
+    "requests",
+    "pandas",
+    "yfinance",
+    "pydantic",
+]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+# Section for Ruff's general settings
+[tool.ruff]
+fix = true
+# The user-facing setting for line width is `line-length`.
+line-length = 88
+# The target Python version.
+target-version = "py314"
+# Indent width is a general setting.
+indent-width = 2
+# Files and directories to exclude.
+exclude = []
+
+# Section for specific linting rules
+[tool.ruff.lint]
+# Select the rule codes/prefixes to enable.
+# "E" and "F" are enabled by default (pycodestyle errors, Pyflakes).
+# "W" = pycodestyle warnings
+# "I" = isort (import sorting)
+# "N" = pep8-naming
+# "UP" = pyupgrade (finds outdated syntax)
+# "B" = flake8-bugbear (finds likely bugs)
+select = ["E", "F", "W", "I", "N", "UP", "B"]
+extend-select = ["W292"]                      # missing-final-newline
+
+# Ignore specific rule codes across the entire project.
+# E501 is the "line too long" error, which is often handled by a formatter like Black.
+# B008 is a warning about function calls as default arguments, which is sometimes intended.
+ignore = ["E501", "B008"]
+
+# You can also ignore rules for specific files.
+# This example ignores "unused import" (F401) errors in all `__init__.py` files.
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+
+# Section for the formatter (Ruff can replace Black)
+[tool.ruff.format]
+# Use double quotes for strings.
+quote-style = "double"
