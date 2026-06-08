@@ -2,14 +2,14 @@
 name = "market-data"
 version = "0.1.0"
 dependencies = [
-    "click",
     "python-dotenv",
-    "alpha_vantage",
     "polygon-api-client",
     "requests",
     "pandas",
-    "yfinance",
-    "pydantic",
+    "robin_stocks",
+    "scipy",
+    "pyotp",
+    "pytz",
 ]
 
 [tool.setuptools]
