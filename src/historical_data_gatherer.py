@@ -21,21 +21,26 @@ class HistoricalDataGatherer:
 
     def fetch_weekly_data(self, ticker: str, weeks: int = 13) -> Optional[pd.DataFrame]:
         """
-        Fetches 'weeks' number of weekly OHLC data for a given ticker.
+        Fetches 'weeks' number of weekly OHLC data for a given ticker, plus 1 additional
+        previous week.
+        The extra week is required because estimators like Garman-Klass-Yang-Zhang (GKYZ)
+        rely on the previous period's close to calculate overnight jumps.
         Standardizes output to a pandas DataFrame with columns: [Open, Close, Low, High, Volume]
         and Date as index.
         """
         try:
+            # We explicitly need weeks + 1 to account for the previous close required by GKYZ
+            target_weeks = weeks + 1
 
             logging.info(f"Fetching Polygon data for {ticker}...")
             # Polygon aggs endpoint:
             # We fetch daily and resample to weekly, or fetch weekly directly.
             # Polygon supports multiplier=1, timespan='week'
 
-            # Since we need exactly 'weeks' of data ending recently, and Polygon requires
-            # date ranges, we calculate a safe lookback window (e.g., weeks * 2 to account for holidays)
+            # Since we need exactly 'target_weeks' of data ending recently, and Polygon requires
+            # date ranges, we calculate a safe lookback window (e.g., target_weeks * 2 to account for holidays)
             end_date = pd.Timestamp.now().strftime('%Y-%m-%d')
-            start_date = (pd.Timestamp.now() - pd.Timedelta(weeks=weeks*2)).strftime('%Y-%m-%d')
+            start_date = (pd.Timestamp.now() - pd.Timedelta(weeks=target_weeks*2)).strftime('%Y-%m-%d')
 
             aggs = []
             for a in self.polygon_client.list_aggs(
@@ -63,8 +68,8 @@ class HistoricalDataGatherer:
             # Enforce the required columns
             std_df = df[['Open', 'Close', 'Low', 'High', 'Volume']].copy()
 
-            # Return exactly the requested number of weeks (tail)
-            return std_df.tail(weeks)
+            # Return exactly the requested number of weeks + 1 (tail)
+            return std_df.tail(target_weeks)
 
         except Exception as e:
             logging.error(f"Polygon fetch failed for {ticker}: {e}")
