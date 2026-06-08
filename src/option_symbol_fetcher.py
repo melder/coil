@@ -61,15 +61,29 @@ def fetch_cboe_symbols(symbol_type: str = "all") -> list[dict[str, Any]]:
                 "type": symbol_type
             })
 
-        logging.info(f"Successfully fetched {len(symbols)} symbols.")
+        symbols.sort(key=lambda x: x["ticker"])
+        logging.info(f"Successfully fetched and sorted {len(symbols)} symbols.")
         return symbols
 
     except Exception as e:
         logging.error(f"Failed to fetch CBOE symbols: {e}")
         return []
 
+def save_symbols_to_csv(symbol_type: str = "all"):
+    from pathlib import Path
+
+    symbols = fetch_cboe_symbols(symbol_type)
+    if not symbols:
+        return
+
+    out_dir = Path("data/symbols")
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    df = pd.DataFrame(symbols)
+    out_path = out_dir / f"{symbol_type}.csv"
+    df.to_csv(out_path, index=False)
+    logging.info(f"Saved {len(df)} {symbol_type} symbols to {out_path}")
+
 if __name__ == "__main__":
-    # Quick sanity check for all types
     for t in ["weeklies", "all"]:
-        symbols = fetch_cboe_symbols(t)
-        print(f"Type: {t:12} | Count: {len(symbols):4} | Samples: {[s['ticker'] for s in symbols[:3]]}")
+        save_symbols_to_csv(t)

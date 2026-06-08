@@ -1,9 +1,10 @@
 import os
+import sys
+import argparse
 import time
 import logging
 import pandas as pd
 from pathlib import Path
-from option_symbol_fetcher import fetch_cboe_symbols
 from historical_data_gatherer import HistoricalDataGatherer
 # We need to catch specific Polygon exceptions for retries if we can,
 # but a general exception catch is safer given the RESTClient behavior.
@@ -13,19 +14,30 @@ logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 # Best practice data directories
 DATA_DIR = Path("data/raw")
 
-def build_intermediary_dataset(free_tier: bool = True, max_retries: int = 3):
+def build_intermediary_dataset(symbol_type: str = "weeklies", free_tier: bool = True, max_retries: int = 3):
     """
-    Fetches the CBOE weekly universe and iteratively downloads 13-week OHLC data.
+    Reads the option symbol universe from a CSV and iteratively downloads 13-week OHLC data.
     Saves each ticker to its own CSV to allow resuming on failure.
     Includes rate limiting and retry logic for API resilience.
     """
     # Ensure data directory exists
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-    # 1. Fetch Universe
-    symbols = fetch_cboe_symbols("weeklies")
+    # 1. Read Universe from CSV
+    symbols_file = Path(f"data/symbols/{symbol_type}.csv")
+    if not symbols_file.exists():
+        logging.error(f"Symbols file not found: {symbols_file}. Please run option_symbol_fetcher.py first.")
+        return
+
+    try:
+        df_symbols = pd.read_csv(symbols_file)
+        symbols = df_symbols.to_dict("records")
+    except Exception as e:
+        logging.error(f"Failed to read symbols CSV: {e}")
+        return
+
     if not symbols:
-        logging.error("Failed to fetch symbol universe. Exiting.")
+        logging.error("Symbol universe is empty. Exiting.")
         return
 
     total_symbols = len(symbols)
@@ -95,4 +107,9 @@ def build_intermediary_dataset(free_tier: bool = True, max_retries: int = 3):
     logging.info(f"Finished. Success: {success_count}, Skipped: {skip_count}, Errors: {error_count}")
 
 if __name__ == "__main__":
-    build_intermediary_dataset(free_tier=True)
+    parser = argparse.ArgumentParser(description="Build intermediary OHLC data from a fetched symbol list.")
+    parser.add_argument("--type", type=str, default="weeklies", choices=["weeklies", "all"], help="The symbol type to process (from data/symbols/).")
+    parser.add_argument("--paid-tier", action="store_true", help="Disable the free tier rate limit of 5 requests/min.")
+    args = parser.parse_args()
+
+    build_intermediary_dataset(symbol_type=args.type, free_tier=not args.paid_tier)
