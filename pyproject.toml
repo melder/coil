@@ -23,7 +23,7 @@ line-length = 88
 # The target Python version.
 target-version = "py314"
 # Indent width is a general setting.
-indent-width = 2
+indent-width = 4
 # Files and directories to exclude.
 exclude = []
 
